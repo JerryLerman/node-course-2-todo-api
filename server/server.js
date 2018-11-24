@@ -22,6 +22,14 @@ app.post('/todos', (req, res) => {
   });
 });
 
+app.get('/todos', (req, res) => {
+  Todo.find().then((todos) => {
+    res.send({todos});
+  }, (e) => {
+    res.status(400).send(e);
+  });
+});
+
 // Go to httpstatuses.com to see all status code
 
 app.listen(3000, () => {
