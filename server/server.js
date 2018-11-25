@@ -7,6 +7,8 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
 var app = express();
+// This variable will be set if running on Heroku, otherwise won't be
+const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -53,8 +55,8 @@ app.get('/todos/:id', (req, res) => {
 });
 // Go to httpstatuses.com to see all status code
 
-app.listen(3000, () => {
-  console.log('Started on port 3000');
+app.listen(port, () => {
+  console.log(`Started on port ${port}`);
 });
 
     // This will create an id variable
