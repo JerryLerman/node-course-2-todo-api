@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+const {ObjectID} = require('mongodb');
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
@@ -30,11 +31,33 @@ app.get('/todos', (req, res) => {
   });
 });
 
+// GET /todos/<id>
+app.get('/todos/:id', (req, res) => {
+  var id = req.params.id;
+  //res.send(req.params);
+
+  if (!ObjectID.isValid(id)) {
+    res.status(404).send();
+  }
+
+  Todo.findById(id)
+  .then((todo) => {
+    if (!todo) {
+      return res.status(404).send();
+    }
+    return res.status(200).send({todo});
+  })
+  .catch((e) => {
+  res.status(400).send();
+  });
+});
 // Go to httpstatuses.com to see all status code
 
 app.listen(3000, () => {
   console.log('Started on port 3000');
 });
+
+    // This will create an id variable
 
 module.exports = {app};
 
