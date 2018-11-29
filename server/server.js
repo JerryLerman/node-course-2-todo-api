@@ -13,17 +13,17 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 app.post('/todos', (req, res) => {
-  console.log('New Post request');
-  console.log(req.body); // body gets stored by bodyparser
+  //console.log('New Post request');
+  //console.log(req.body); // body gets stored by bodyparser
   var todo = new Todo({
     text: req.body.text
   });
 
   todo.save().then ((doc) => {
     res.send(doc);
-    console.log('Post successful');
+    //console.log('Post successful');
   }, (e) => {
-      console.log('Post failed',JSON.stringify(e,undefined,2));
+      //console.log('Post failed',JSON.stringify(e,undefined,2));
       res.status(400).send(e);
   });
 });
@@ -60,22 +60,22 @@ app.get('/todos/:id', (req, res) => {
 
 app.delete('/todos/:id', (req,res) => {
   var id = req.params.id;
-  console.log(`Request to delete ID: ${id}`);
+  //console.log(`Request to delete ID: ${id}`);
 
   if (!ObjectID.isValid(id)) {
-    console.log('**ID is not valid');
+    //console.log('**ID is not valid');
     return res.status(404).send();
   }
 
   Todo.findByIdAndRemove(id).then((todo) => {
     if (!todo) {
-      console.log("Couldn't find the ID");
+      //console.log("Couldn't find the ID");
       return res.status(404).send();
     }
-    console.log('Removed: ', JSON.stringify(todo,undefined,2));
+    //console.log('Removed: ', JSON.stringify(todo,undefined,2));
     return res.status(200).send({todo});
   }). catch((e) => {
-    console.log("Received an error\n",JSON.stringify(e,undefined,2));
+    //console.log("Received an error\n",JSON.stringify(e,undefined,2));
     res.status(400).send(e);
   });
 
