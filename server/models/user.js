@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 
 // UserSchema will store the Schema for a user. It will store all the user properties
@@ -82,9 +83,23 @@ UserSchema.statics.findByToken = function (token) {
     'tokens.token': token,  // Looking inside the tokens array for a match
     'tokens.access': 'auth'
   })
-
-
 };
+
+// This runs just before we do the save
+UserSchema.pre('save', function (next) {
+  var user = this;
+  // We only want to hash the password if it's been modified
+  if (user.isModified('password')) {
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        user.password = hash;
+        next();
+      });
+    });
+  } else {
+    next(); // Not modified, just move on    
+  }
+});
 
 var User = mongoose.model('User', UserSchema);
 
