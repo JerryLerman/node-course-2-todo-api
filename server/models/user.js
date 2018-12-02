@@ -49,8 +49,9 @@ UserSchema.methods.toJSON = function () {
 // Create our own method called generateAuthToken that is part of the schema
 // Not using an arrow function but a regular function because we need the "this"
 // keyword. The "this" stores the individual document.
+// .methods. creates an instance method
 UserSchema.methods.generateAuthToken = function () {
-  var user = this;
+  var user = this;  // lower "u" because it's an instance user
   var access = 'auth';
   var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
 
@@ -60,6 +61,29 @@ UserSchema.methods.generateAuthToken = function () {
   return user.save().then(() => {
     return token;
   });
+};
+
+//Statics is used for model methods
+UserSchema.statics.findByToken = function (token) {
+  var User = this; // Upper "U" because it's a model this
+  var decoded;
+
+  try {
+    decoded = jwt.verify(token, 'abc123'); // Throws exception if anything doesn't match
+  } catch (e) {
+    // return new Promise((resolve, reject) => {
+    //   reject();
+    // });
+    return Promise.reject();
+  }
+
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,  // Looking inside the tokens array for a match
+    'tokens.access': 'auth'
+  })
+
+
 };
 
 var User = mongoose.model('User', UserSchema);
