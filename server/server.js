@@ -4,6 +4,7 @@ const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const bcrypt = require('bcryptjs');
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
@@ -131,9 +132,55 @@ app.post('/users', (req, res) => {
   })
 });
 
-app.get('/users/me', authenticate, (req, res) => {
+// app.get('/users/me', authenticate, (req, res) => {
+//     res.send(req.user);
+// });
+
+app.get('/users/me',  authenticate, (req, res) => {
     res.send(req.user);
+});
+
+
+
+
+// POST /users/login {email, password}
+// app.post('/users/login', (req,res) => {
+//   var body = _.pick(req.body, ['email', 'password']);
+//   var email = body.email;
+//   var password = body.password;
+//   var hashedPassword;
+//
+//   User.findOne({email}).then((user, err) => {
+//     if (!user) {
+//       console.log(`Did not find a user for ${email}`);
+//       return res.status(404).send();
+//     }
+//     hashedPassword = user.password;
+//     bcrypt.compare(password, hashedPassword, (berr, bres) => {
+//       if (bres) {
+//         return res.status(200).send({user});
+//       } else {
+//         return res.status(401).send();
+//       }
+//     });
+//   }).catch((err) => {
+//     console.log('Fell into findOne catch block\n',err);
+//   });
+// });
+//
+
+//POST /users/login {email, password}
+app.post('/users/login', (req,res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+
+  User.findByCredentials(body.email, body.password).then((user) => {
+    user.generateAuthToken().then((token) => {
+      res.header('x-auth', token).send(user);
+    });
+  }).catch((e) => {
+    res.status(401).send();
   });
+});
 
 app.listen(port, () => {
   console.log(`Started on port ${port}`);
