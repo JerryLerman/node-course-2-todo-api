@@ -4,23 +4,11 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
-
-const todos = [{
-  _id: new ObjectID(),
-  text: 'First test todo'
-}, {
-  _id: new ObjectID(),
-  text: 'Second test todo',
-  completed: true,
-  completedAt: Date.now()
-}];
-
-beforeEach((done) => {
-  Todo.remove({}).then(() => {
-  Todo.insertMany(todos);
-}). then(() => done()); // Wipes all todos
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('POST /todos', () => {
   it ('should create a new todo', (done) => {
@@ -200,5 +188,104 @@ describe('PATCH /todos/:id', () => {
     })
     .end(done);
 
+  });
+});
+
+describe('GET /users/me', () => {
+  it('should return user if authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .set('x-auth',users[0].tokens[0].token)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body._id).toBe(users[0]._id.toHexString());
+        expect(res.body.email).toBe(users[0].email);
+      })
+      .end(done);
+  });
+
+  it ('should return 401 if not authenticated', (done) => {
+    request(app)
+    .get('/users/me')
+    .expect(401)
+    .expect((res) => {
+      expect(res.body).toEqual({});
+    })
+    .end(done);
+  });
+});
+
+describe('POST /users', () => {
+  it ('should create a user', (done) => {
+    var email = 'me@test.com';
+    var password = '123mnb!';
+
+    request(app)
+      .post ('/users')
+      .send({email,password})
+      .expect(200)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toExist();
+        expect(res.body._id).toExist();
+        expect(res.body.email).toBe(email);
+      })
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findOne({email}). then((user) => {
+          expect(user).toExist();
+          expect(user.password).toNotBe(password);
+          done();
+        });
+      });
+  });
+
+  it ('should return \"lerman is not a valid email\"', (done) => {
+    var email = "lerman";
+    var password = 'APassword123';
+
+    request(app)
+    .post('/users')
+    .send({email, password})
+    .expect(400)
+    .expect((res) => {
+      expect(res.body.errors.email.message).toInclude(`${email} is not a valid email`);
+    })
+    .end(done);
+  });
+
+  it ('should return error if password is invalid', (done) => {
+    var email = "another@email.com";
+    var password = 'short';
+
+    request(app)
+    .post('/users')
+    .send({email, password})
+    .expect(400)
+    .expect((res) => {
+      //console.log(JSON.stringify(res.body.errors,undefined,2));
+      expect(res.body.errors.password.message).toInclude('is shorter than the minimum allowed length (6)');
+    })
+    .end(done);
+  });
+
+  it('should not create user if email in use', (done) => {
+    var email = 'Jerry@Lerman.com';
+    var password = 'APassword123';
+
+    request(app)
+    .post('/users')
+    .send({
+      email: users[0].email,
+      password
+    })
+    .expect(400)
+    .expect((res) => {
+      //console.log(JSON.stringify(res.body,undefined,2));
+      expect(res.body.errmsg).toInclude('email_1 dup key');
+    })
+    .end(done);
   });
 });
