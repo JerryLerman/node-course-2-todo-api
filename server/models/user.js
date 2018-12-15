@@ -64,6 +64,16 @@ UserSchema.methods.generateAuthToken = function () {
   });
 };
 
+UserSchema.methods.removeToken = function (token) {
+  var user = this;
+
+  return user.update({
+    $pull: {
+      tokens: {token}
+    }
+  });
+};
+
 //Statics is used for model methods
 UserSchema.statics.findByToken = function (token) {
   var User = this; // Upper "U" because it's a model this
