@@ -31,11 +31,29 @@ const todos = [{
   completedAt: Date.now()
 }];
 
+// const populateTodos = (done) => {
+//     Todo.remove({}).then(() => {
+//     Todo.insertMany(todos);
+//   }).then(() => done());
+// };
+
 const populateTodos = (done) => {
     Todo.remove({}).then(() => {
     Todo.insertMany(todos);
-  }). then(() => done());
+  }).then(() => done())
+  .catch((e) => done(e));
 };
+
+// const populateUsers = (done) => {
+//   User.remove({}).then(() => {
+//     var userOne = new User(users[0]).save();
+//     var userTwo = new User(users[1]).save();
+//
+//     // Wait for all promises to finish
+//     return Promise.all([userOne, userTwo])
+//   }).then(() => done());
+// };
+
 
 const populateUsers = (done) => {
   User.remove({}).then(() => {
@@ -44,7 +62,8 @@ const populateUsers = (done) => {
 
     // Wait for all promises to finish
     return Promise.all([userOne, userTwo])
-  }).then(() => done());
+  }).then(() => done())
+  .catch((e) => done(e));
 };
 
 module.exports = {todos, populateTodos, users, populateUsers};
